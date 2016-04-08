@@ -1,1 +1,1 @@
-@ Aici bagati lucrurile care nu sunt gata
+# Aici bagati lucrurile care nu sunt gata
