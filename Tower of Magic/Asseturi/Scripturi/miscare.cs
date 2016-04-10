@@ -10,7 +10,7 @@ public class miscare : MonoBehaviour
 
     private float iscrouch = 1f;
     public float crouchvalue;
-
+    
     public float FEEToffsetCROUCHx;
     public float FEEToffsetCROUCHy;
     public float FEEToffsetX;
@@ -24,12 +24,12 @@ public class miscare : MonoBehaviour
     public float horizontaloffsetcrouch;
     public float verticaloffsetcrouch;
     public float crouchsize;
-    public bool crauci;
+    public bool crauci=false;
     public bool crouchdroid = false;
     public bool beginprocedure;
     public AudioSource audioSource;
     public AudioClip Scored;
-    public bool android;
+    private bool android;
     public float AndroidOspeed;
     public float h;
     public Vector2 go;
@@ -58,8 +58,13 @@ public class miscare : MonoBehaviour
     private BoxCollider2D box;
     public BoxCollider2D feet;
 
+    
     void Start()
     {
+        if (Application.platform == RuntimePlatform.Android) android = true;
+
+        if (!android) slider.value = 0.49f;
+            
         baiet = gameObject.GetComponent<Rigidbody2D>();
         box = gameObject.GetComponent<BoxCollider2D>();
 
@@ -92,17 +97,16 @@ public class miscare : MonoBehaviour
         }
         else
         {
-            animright.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
-            animleft.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
+            animright.SetFloat("Speed", Mathf.Abs(h) *iscrouch);
+            animleft.SetFloat("Speed", Mathf.Abs(h) *iscrouch);
         }
             //ANIMATZIONE END
 
             //CROUCH BEGIN
-            if (Input.GetAxis("Horizontal") < -0.1f || mover< 0.5f)
+            if (h < 0 || mover< 0.5f)
             {
-                
                 left = true;
-                crauci = true;
+                
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
                  {
                     iscrouch = crouchvalue;
@@ -115,6 +119,7 @@ public class miscare : MonoBehaviour
                  }
                  else
                  {
+                crauci = false;
                 iscrouch = 1f;
                 //animRIGHT.gameObject.SetActive(false);
                 //animLEFT.gameObject.SetActive(true);
@@ -123,24 +128,54 @@ public class miscare : MonoBehaviour
                   }
             }
 
-        if (Input.GetAxis("Horizontal") > 0.1f || mover>= 0.5f)
+        if (android)
         {
-            left = false;
-            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
+            if (h > 0 || mover >= 0.5f)
             {
-                iscrouch = crouchvalue;
-                animright.SetBool("crouchy", true);
-                animleft.SetBool("crouchy", true);
-                //animRIGHT.gameObject.SetActive(true);
-                //animLEFT.gameObject.SetActive(false);
+                left = false;
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
+                {
+                    crauci = true;
+                    iscrouch = crouchvalue;
+                    animright.SetBool("crouchy", true);
+                    animleft.SetBool("crouchy", true);
+                    //animRIGHT.gameObject.SetActive(true);
+                    //animLEFT.gameObject.SetActive(false);
+                }
+                else
+                {
+                    crauci = false;
+                    iscrouch = 1f;
+                    animright.SetBool("crouchy", false);
+                    animleft.SetBool("crouchy", false);
+                    //animRIGHT.gameObject.SetActive(true);
+                    //animLEFT.gameObject.SetActive(false);
+                }
             }
-            else
+        }
+        else
+        {
+            if (h >= 0 || mover >= 0.5f)
             {
-                iscrouch = 1f;
-                animright.SetBool("crouchy", false);
-                animleft.SetBool("crouchy", false);
-                //animRIGHT.gameObject.SetActive(true);
-                //animLEFT.gameObject.SetActive(false);
+                left = false;
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
+                {
+                    crauci = true;
+                    iscrouch = crouchvalue;
+                    animright.SetBool("crouchy", true);
+                    animleft.SetBool("crouchy", true);
+                    //animRIGHT.gameObject.SetActive(true);
+                    //animLEFT.gameObject.SetActive(false);
+                }
+                else
+                {
+                    crauci = false;
+                    iscrouch = 1f;
+                    animright.SetBool("crouchy", false);
+                    animleft.SetBool("crouchy", false);
+                    //animRIGHT.gameObject.SetActive(true);
+                    //animLEFT.gameObject.SetActive(false);
+                }
             }
         }
         //CROUCH END
@@ -150,12 +185,13 @@ public class miscare : MonoBehaviour
     {
         crouchdroid = !crouchdroid;
         butoncrauci.SetBool("iscrouci", crouchdroid);
-        if (mover >= 0.5f)
+        if (mover >= 0.5f || h >= 0)
         {
             if (crouchdroid)
             {
                 iscrouch = crouchvalue;
                 left = false;
+                crauci = true;
                 animright.SetBool("crouchy", true);
                 animleft.SetBool("crouchy", true);
                 //animRIGHT.gameObject.SetActive(true);
@@ -165,6 +201,7 @@ public class miscare : MonoBehaviour
             {
                 iscrouch = 1f;
                 left = false;
+                crauci = false;
                 animright.SetBool("crouchy", false);
                 animleft.SetBool("crouchy", false);
                 //animRIGHT.gameObject.SetActive(true);
@@ -172,10 +209,10 @@ public class miscare : MonoBehaviour
             }
         }
 
-        if(mover<0.5f)
+        if (mover < 0.5f || h<0)
         {
             left = true;
-            if (crouchdroid)
+            if (crouchdroid || crauci)
             {
                 iscrouch = crouchvalue;
                 animright.SetBool("crouchy", true);
@@ -245,8 +282,7 @@ public class miscare : MonoBehaviour
 
     void FixedUpdate()
     {
-        
-        if(crouchdroid && lapamant)
+        if((crouchdroid && lapamant) || (crauci && lapamant))
         {
             box.size = new Vector2(0.6983392f, crouchsize);
 
@@ -277,7 +313,9 @@ public class miscare : MonoBehaviour
         }
 
         //RETURN SLIDER TO 0.5 BEGIN
-        if (beginprocedure)
+        if (android)
+        {
+            if (beginprocedure)
         {
             if (slider.value < 0.5f) slider.value += 0.03f;
             else slider.value -= 0.03f;
@@ -293,42 +331,44 @@ public class miscare : MonoBehaviour
         //RETURN SLIDER TO 0.5 END
 
         //MOVE ON ANDROID BEGIN
-        go = new Vector2(mover - 0.5f, 0);
+        
+            go = new Vector2(mover - 0.5f, 0);
 
-        if (go.x > 0.03f)
-        {
-            if (atingeredematase != 1) baiet.AddForce(AndroidOspeed * go * iscrouch, 0);
-        }
+            if (go.x > 0.03f)
+            {
+                if (atingeredematase != 1) baiet.AddForce(AndroidOspeed * go * iscrouch, 0);
+            }
 
-        if(go.x < -0.03f)
-        {
-            if (atingeredematase != 2) baiet.AddForce(AndroidOspeed * go * iscrouch, 0);
-        }
+            if (go.x < -0.03f)
+            {
+                if (atingeredematase != 2) baiet.AddForce(AndroidOspeed * go * iscrouch, 0);
+            }
 
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
-        {
-            iscrouch = crouchvalue;
-            animright.SetBool("crouchy", true);
-            animleft.SetBool("crouchy", true);
-        }
-        else
-        {
-            iscrouch = 1f;
-            animright.SetBool("crouchy", false);
-            animleft.SetBool("crouchy", false);
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
+            {
+                iscrouch = crouchvalue;
+                animright.SetBool("crouchy", true);
+                animleft.SetBool("crouchy", true);
+            }
+            else
+            {
+                iscrouch = 1f;
+                animright.SetBool("crouchy", false);
+                animleft.SetBool("crouchy", false);
+            }
         }
         //MOVE ON ANDROID END
 
         //MOVE ON PC BEGIN
          h = Input.GetAxis("Horizontal");
 
-        if (Input.GetAxis("Horizontal") > 0)
+        if (h > 0)
         {
-            if (atingeredematase != 1) baiet.AddForce((Vector2.right * vitezas) * h);
+            if (atingeredematase != 1) baiet.AddForce((Vector2.right * vitezas) * h *iscrouch);
         }
         else
         {
-            if (atingeredematase != 2) baiet.AddForce((Vector2.right * vitezas) * h);
+            if (atingeredematase != 2) baiet.AddForce((Vector2.right * vitezas) * h *iscrouch);
         }
         //MOVE ON PC END
 
