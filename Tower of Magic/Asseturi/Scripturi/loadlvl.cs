@@ -3,12 +3,16 @@ using System.Collections;
 
 public class loadlvl : MonoBehaviour {
 
-	void Start () {
-	
+    public GameObject source;
+	void Start ()
+    {
+        
 	}
 
 	public void load()
     {
+        source.SetActive(true);
         Application.LoadLevel("scene");
+
     }
 }
