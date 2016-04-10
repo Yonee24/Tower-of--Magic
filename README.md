@@ -1,1 +1,1 @@
-# Official Tower Of Magic Git!
+# Official Tower of Magic repository
