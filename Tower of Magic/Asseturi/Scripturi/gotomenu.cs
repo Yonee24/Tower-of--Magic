@@ -14,6 +14,5 @@ public class gotomenu : MonoBehaviour
     {
         source.SetActive(true);
         Application.LoadLevel("MainMenu");
-
     }
 }
