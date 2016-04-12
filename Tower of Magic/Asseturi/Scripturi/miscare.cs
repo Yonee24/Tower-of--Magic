@@ -4,13 +4,20 @@ using System.Collections;
 
 public class miscare : MonoBehaviour
 {
+    private Animator life;
     private Animator animleft;
     private Animator animright;
     private Animator butoncrauci;
 
     private float iscrouch = 1f;
     public float crouchvalue;
-    
+
+    public bool badman;
+    public bool deal = true;
+    public int damage = 0;
+    public float timer = 0;
+    public float startedINVINCIBLE;
+    public int debug;
     public float FEEToffsetCROUCHx;
     public float FEEToffsetCROUCHy;
     public float FEEToffsetX;
@@ -19,12 +26,15 @@ public class miscare : MonoBehaviour
     public float leftFEEToffsetCROUCHy;
     public float leftFEEToffsetX;
     public float leftFEEToffsetY;
-
-    public bool left=false;
+    public bool firsttimer;
+    public bool passed = false;
+    public bool touchenemy = false;
+    public static int lifer = 12;
+    public bool left = false;
     public float horizontaloffsetcrouch;
     public float verticaloffsetcrouch;
     public float crouchsize;
-    public bool crauci=false;
+    public bool crauci = false;
     public bool crouchdroid = false;
     public bool beginprocedure;
     public AudioSource audioSource;
@@ -38,7 +48,7 @@ public class miscare : MonoBehaviour
     public bool sary;
     public bool selected = false;
     public int MoveOtouch; // 1 stanga - 2 dreapta //
-    public bool JumpOtouch=false;
+    public bool JumpOtouch = false;
     public int move;
     public int atingeredematase; // 0 nimic - 1 stanga - 2 dreapta //
     public bool up = false;
@@ -51,30 +61,94 @@ public class miscare : MonoBehaviour
     public float mover = 0.5f;
     public Slider slider;
 
+    public GameObject hearts;
     public GameObject animLEFT;
     public GameObject animRIGHT;
     public GameObject crouchbutton;
 
-    private BoxCollider2D box;
-    public BoxCollider2D feet;
+    public SpriteRenderer colorredLEFT;
+    public SpriteRenderer colorredRIGHT;
 
-    
+    private BoxCollider2D box;
+
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.tag == "jumpable")
+            lapamant = true;
+    }
+
+    void OnCollisionExit2D(Collision2D col)
+    {
+        if (col.gameObject.tag == "jumpable")
+            lapamant = false;
+    }
+
+    void DealDamage()
+    {
+        if (timer > startedINVINCIBLE + 0.75f)
+        {
+            GlobalSettings.invincible = false;
+            colorredLEFT.color = new Color(1f, 0.5f, 0.5f, 1f);
+            colorredRIGHT.color = new Color(1f, 0.5f, 0.5f, 1f);
+        }
+        else
+        {
+            colorredLEFT.color = new Color(1f, 1f, 1f, 1f);
+            colorredRIGHT.color = new Color(1f, 1f, 1f, 1f);
+        }
+
+        if (GlobalSettings.invincible == false)
+        {
+            lifer -= damage;
+
+            if (lifer <= 0)
+            {
+                GlobalSettings.ded = true;
+                Application.LoadLevel("MainMenu");
+            }
+            startedINVINCIBLE = timer;
+            GlobalSettings.invincible = true;
+        }
+
+    }
+
     void Start()
     {
+        if (GlobalSettings.ded == true || GlobalSettings.invincible == true || lifer<12)
+        {
+            GlobalSettings.ded = false;
+            GlobalSettings.invincible = false;
+            lifer = 12;
+        }
+
+        if (GlobalSettings.isonpause == true)
+        {
+            GlobalSettings.isonpause = false;
+            Time.timeScale = 1;
+        }
+        
+        life = hearts.GetComponent<Animator>();
+
         if (Application.platform == RuntimePlatform.Android) android = true;
 
         if (!android) slider.value = 0.49f;
-            
+
         baiet = gameObject.GetComponent<Rigidbody2D>();
         box = gameObject.GetComponent<BoxCollider2D>();
 
         animright = animRIGHT.GetComponent<Animator>();
         animleft = animLEFT.GetComponent<Animator>();
-        butoncrauci =crouchbutton.GetComponent<Animator>();
+        butoncrauci = crouchbutton.GetComponent<Animator>();
+
+        colorredLEFT = animLEFT.GetComponent<SpriteRenderer>();
+        colorredRIGHT = animRIGHT.GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
+        timer += Time.deltaTime;
+        life.SetInteger("Life", lifer);
+
         if (left)
         {
             turnonLEFT();
@@ -92,23 +166,25 @@ public class miscare : MonoBehaviour
 
         if (android)
         {
-            animright.SetFloat("Speed", Mathf.Abs(2 * (mover - 0.5f))*iscrouch);
-            animleft.SetFloat("Speed", Mathf.Abs(2 * (mover - 0.5f))*iscrouch);
+            animright.SetFloat("Speed", Mathf.Abs(2 * (mover - 0.5f)) * iscrouch);
+            animleft.SetFloat("Speed", Mathf.Abs(2 * (mover - 0.5f)) * iscrouch);
         }
         else
         {
-            animright.SetFloat("Speed", Mathf.Abs(h) *iscrouch);
-            animleft.SetFloat("Speed", Mathf.Abs(h) *iscrouch);
+            animright.SetFloat("Speed", Mathf.Abs(h) * iscrouch);
+            animleft.SetFloat("Speed", Mathf.Abs(h) * iscrouch);
         }
-            //ANIMATZIONE END
+        //ANIMATZIONE END
 
-            //CROUCH BEGIN
-            if (h < 0 || mover< 0.5f)
+        //CROUCH BEGIN
+        if (!android)
+        {
+            if (h < 0)
             {
                 left = true;
-                
+
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
-                 {
+                {
                     iscrouch = crouchvalue;
                     crauci = true;
                     animright.SetBool("crouchy", true);
@@ -116,21 +192,18 @@ public class miscare : MonoBehaviour
 
                     //animRIGHT.gameObject.SetActive(false);
                     //animLEFT.gameObject.SetActive(true);
-                 }
-                 else
-                 {
-                crauci = false;
-                iscrouch = 1f;
-                //animRIGHT.gameObject.SetActive(false);
-                //animLEFT.gameObject.SetActive(true);
-                animright.SetBool("crouchy", false);
-                     animleft.SetBool("crouchy", false);
-                  }
+                }
+                else
+                {
+                    crauci = false;
+                    iscrouch = 1f;
+                    //animRIGHT.gameObject.SetActive(false);
+                    //animLEFT.gameObject.SetActive(true);
+                    animright.SetBool("crouchy", false);
+                    animleft.SetBool("crouchy", false);
+                }
             }
-
-        if (android)
-        {
-            if (h > 0 || mover >= 0.5f)
+            if (h >= 0)
             {
                 left = false;
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
@@ -153,9 +226,9 @@ public class miscare : MonoBehaviour
                 }
             }
         }
-        else
+        if (android)
         {
-            if (h >= 0 || mover >= 0.5f)
+            if (mover >= 0.455f)
             {
                 left = false;
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
@@ -175,6 +248,31 @@ public class miscare : MonoBehaviour
                     animleft.SetBool("crouchy", false);
                     //animRIGHT.gameObject.SetActive(true);
                     //animLEFT.gameObject.SetActive(false);
+                }
+            }
+
+            if (mover < 0.455f)
+            {
+                left = true;
+
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.DownArrow) || crouchdroid)
+                {
+                    iscrouch = crouchvalue;
+                    crauci = true;
+                    animright.SetBool("crouchy", true);
+                    animleft.SetBool("crouchy", true);
+
+                    //animRIGHT.gameObject.SetActive(false);
+                    //animLEFT.gameObject.SetActive(true);
+                }
+                else
+                {
+                    crauci = false;
+                    iscrouch = 1f;
+                    //animRIGHT.gameObject.SetActive(false);
+                    //animLEFT.gameObject.SetActive(true);
+                    animright.SetBool("crouchy", false);
+                    animleft.SetBool("crouchy", false);
                 }
             }
         }
@@ -209,7 +307,7 @@ public class miscare : MonoBehaviour
             }
         }
 
-        if (mover < 0.5f || h<0)
+        if (mover < 0.5f || h < 0)
         {
             left = true;
             if (crouchdroid || crauci)
@@ -230,7 +328,7 @@ public class miscare : MonoBehaviour
                 //animLEFT.gameObject.SetActive(true);
             }
         }
-        
+
     }
 
     private void turnoffRITE()
@@ -282,19 +380,17 @@ public class miscare : MonoBehaviour
 
     void FixedUpdate()
     {
-        if((crouchdroid && lapamant) || (crauci && lapamant))
+        if ((crouchdroid && lapamant) || (crauci && lapamant))
         {
             box.size = new Vector2(0.6983392f, crouchsize);
 
             if (!left)
             {
                 box.offset = new Vector2(-0.5f, verticaloffsetcrouch);
-                feet.offset = new Vector2(FEEToffsetCROUCHx, FEEToffsetCROUCHy);
             }
             else
             {
                 box.offset = new Vector2(horizontaloffsetcrouch, verticaloffsetcrouch);
-                feet.offset = new Vector2(leftFEEToffsetCROUCHx, leftFEEToffsetCROUCHy);
             }
         }
         else
@@ -303,12 +399,10 @@ public class miscare : MonoBehaviour
             if (!left)
             {
                 box.offset = new Vector2(-0.6f, -0.7063659f);
-                feet.offset = new Vector2(FEEToffsetX, FEEToffsetY);
             }
             else
             {
-                box.offset = new Vector2(-0.24f, -0.7063659f);
-                feet.offset = new Vector2(leftFEEToffsetX, leftFEEToffsetY);
+                box.offset = new Vector2(-0.6f, -0.7063659f);
             }
         }
 
@@ -316,22 +410,22 @@ public class miscare : MonoBehaviour
         if (android)
         {
             if (beginprocedure)
-        {
-            if (slider.value < 0.5f) slider.value += 0.03f;
-            else slider.value -= 0.03f;
-            mover = slider.value;
-
-            if(slider.value<0.55f && slider.value>0.45f)
             {
-                beginprocedure = false;
-                mover = 0.5f;
-                slider.value = 0.5f;
-            }
-        }
-        //RETURN SLIDER TO 0.5 END
+                if (slider.value < 0.5f) slider.value += 0.03f;
+                else slider.value -= 0.03f;
+                mover = slider.value;
 
-        //MOVE ON ANDROID BEGIN
-        
+                if (slider.value < 0.55f && slider.value > 0.45f)
+                {
+                    beginprocedure = false;
+                    mover = 0.5f;
+                    slider.value = 0.5f;
+                }
+            }
+            //RETURN SLIDER TO 0.5 END
+
+            //MOVE ON ANDROID BEGIN
+
             go = new Vector2(mover - 0.5f, 0);
 
             if (go.x > 0.03f)
@@ -360,15 +454,15 @@ public class miscare : MonoBehaviour
         //MOVE ON ANDROID END
 
         //MOVE ON PC BEGIN
-         h = Input.GetAxis("Horizontal");
+        h = Input.GetAxis("Horizontal");
 
         if (h > 0)
         {
-            if (atingeredematase != 1) baiet.AddForce((Vector2.right * vitezas) * h *iscrouch);
+            if (atingeredematase != 1) baiet.AddForce((Vector2.right * vitezas) * h * iscrouch);
         }
         else
         {
-            if (atingeredematase != 2) baiet.AddForce((Vector2.right * vitezas) * h *iscrouch);
+            if (atingeredematase != 2) baiet.AddForce((Vector2.right * vitezas) * h * iscrouch);
         }
         //MOVE ON PC END
 
@@ -392,9 +486,67 @@ public class miscare : MonoBehaviour
             {
                 baiet.velocity = new Vector2(baiet.velocity.x, puteredesaritura);
                 audioSource.clip = Scored;
+                audioSource.volume = GlobalSettings.vol * GlobalSettings.peasantvol;
                 audioSource.Play();
             }
         }
         //JUMP END
+    }
+
+    void OnTriggerEnter2D(Collider2D obj)
+    {
+        if(obj.tag=="Enemy")
+        {
+            InvokeRepeating("DealDamage", 0f, 0.1f);
+            GlobalSettings.invincible = true;
+            
+            damage++;
+        }
+
+        if (obj.tag == "Enemy2")
+        {
+            InvokeRepeating("DealDamage", 0f, 0.1f);
+            GlobalSettings.invincible = true;
+
+            damage+=2;
+        }
+
+        if (obj.tag == "Enemy4")
+        {
+            InvokeRepeating("DealDamage", 0f, 0.1f);
+            GlobalSettings.invincible = true;
+
+            damage+=4;
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D obj)
+    {
+        if(obj.tag=="Enemy")
+        {
+            colorredLEFT.color = new Color(1f, 1f, 1f, 1f);
+            colorredRIGHT.color = new Color(1f, 1f, 1f, 1f);
+
+            CancelInvoke("DealDamage");
+            damage--;
+        }
+
+        if (obj.tag == "Enemy2")
+        {
+            colorredLEFT.color = new Color(1f, 1f, 1f, 1f);
+            colorredRIGHT.color = new Color(1f, 1f, 1f, 1f);
+
+            CancelInvoke("DealDamage");
+            damage-=2;
+        }
+
+        if (obj.tag == "Enemy4")
+        {
+            colorredLEFT.color = new Color(1f, 1f, 1f, 1f);
+            colorredRIGHT.color = new Color(1f, 1f, 1f, 1f);
+
+            CancelInvoke("DealDamage");
+            damage-=4;
+        }
     }
 }

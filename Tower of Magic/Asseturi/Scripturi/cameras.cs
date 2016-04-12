@@ -6,18 +6,21 @@ public class cameras : MonoBehaviour
     private Vector2 velocity;
 
     private GameObject jugar;
+    public AudioSource sursasonora;
     public float offsetX;
     public float smoothTimeY;
     public float smoothTimeX;
 
     void Start()
     {
+        sursasonora.volume = GlobalSettings.vol * GlobalSettings.musicvols;
+
         jugar = GameObject.FindGameObjectWithTag("Player");
     }
 
     void Update()
     {
-
+        
     }
 
     void FixedUpdate()

@@ -7,6 +7,7 @@ public class sariodata : MonoBehaviour
 
 	void Start()
     {
+        
         jugar = gameObject.GetComponentInParent<miscare>();
     }
 
